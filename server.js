@@ -7,6 +7,7 @@ import postRoutes from "./routes/postRoutes.js";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import flash from "connect-flash";
+import path from "path";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,6 +19,10 @@ connectMongoDB();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// make uploads directory as static
+
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
 
 // cookie middleware
 

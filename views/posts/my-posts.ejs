@@ -1,43 +1,80 @@
 <%- include('../partials/header') %>
 
-<div class="container">
-    <div class="row mt-5">
-        <div class="col-lg-12 mx-auto">
-            <div class="card shadow">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h2 class="fw-bold text-secondary">My Posts</h2>
-                    <a class="btn btn-primary" href="/create-post">Create New Post</a>
-                </div>
-                <div class="card-body">
-                    <table class="table table-striped align-middle">
+    <div class="container">
+        <div class="row mt-5">
+            <div class="col-lg-12 mx-auto">
+                <% if(message.success){ %>
 
-                        <thead>
-                            <tr>
-                                <th>Title</th>
-                                <th>Content</th>
-                                <th>Image</th>
-                                <th>Created At</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Test</td>
-                                <td>Test</td>
-                                <td>Test</td>
-                                <td>Test</td>
-                                <td>
-                                    <a class="btn btn-sm btn-primary" href="/edit-post/1212">Edit</a>
-                                    <a class="btn btn-sm btn-danger" href="/delete-post">Delete</a>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                    <div class="alert alert-success" role="alert">
+                        <strong>
+                            <%= message.success %>
+                        </strong>
+                    </div>
+
+                    <% } %>
+
+                        <% if(message.error){ %>
+
+                            <div class="alert alert-danger" role="alert">
+                                <strong>
+                                    <%= message.error %>
+                                </strong>
+                            </div>
+
+                            <% } %>
+                                <div class="card shadow">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h2 class="fw-bold text-secondary">My Posts</h2>
+                                        <a class="btn btn-primary" href="/create-post">Create New Post</a>
+                                    </div>
+                                    <div class="card-body">
+                                        <table class="table table-striped align-middle">
+
+                                            <thead>
+                                                <tr>
+                                                    <th>Title</th>
+                                                    <th>Content</th>
+                                                    <th>Image</th>
+                                                    <th>Created At</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% posts.forEach((post)=> { %>
+
+                                                    <tr>
+                                                        <td>
+                                                            <%= post.title %>
+                                                        </td>
+                                                        <td>
+                                                            <%= post.content.substring(0,50) %>...
+                                                        </td>
+                                                        <td>
+                                                            <img src="/uploads/<%= post.image %>"
+                                                                alt="<%= post.title %>" class="img-fluid img-thumbnail"
+                                                                width="100">
+                                                        </td>
+                                                        <td>
+                                                            <%= post.createdAt.toLocaleDateString() %>
+                                                        </td>
+                                                        <td>
+                                                            <a class="btn btn-sm btn-success"
+                                                                href="/post/<%= post.slug %>">View</a>
+                                                            <a class="btn btn-sm btn-primary"
+                                                                href="/edit-post/<%= post._id %>">Edit</a>
+                                                            <a class="btn btn-sm btn-danger"
+                                                                href="/delete-post/<%= post._id %>">Delete</a>
+                                                        </td>
+                                                    </tr>
+
+                                                    <% }) %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
             </div>
         </div>
     </div>
-</div>
 
 
-<%- include('../partials/footer') %>
+    <%- include('../partials/footer') %>
