@@ -9,6 +9,10 @@ import session from "express-session";
 import flash from "connect-flash";
 import path from "path";
 
+import ConnectMongoDBSession from "connect-mongodb-session";
+
+const MongoDBStore = ConnectMongoDBSession(session);
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -38,6 +42,10 @@ app.use(
     cookie: {
       maxAge: 60000 * 60 * 24 * 7, //1 week
     },
+    store: new MongoDBStore({
+        uri: process.env.MONGODB_URI,
+        collection: "sessions"
+    })
   })
 );
 
