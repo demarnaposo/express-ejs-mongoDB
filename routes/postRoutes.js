@@ -4,6 +4,7 @@ import multer from 'multer';
 import path from 'path';
 import User from '../models/userModel.js';
 import Post from '../models/postModel.js';
+import { unlink } from 'fs';
 
 
 const router = express.Router();
@@ -12,12 +13,14 @@ const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'uploads/')
     },
+
     filename: function (req, file, cb) {
         cb(null, Date.now() + path.extname(file.originalname))
     }
 })
 
 // Initialize upload variable with the storage engine
+
 
 const upload = multer({storage: storage})
 
@@ -74,6 +77,14 @@ router.get('/edit-post/:id', protectedRoute, async (req, res) => {
 
         const postId = req.params.id
         const post = await Post.findById(postId)
+
+
+        if(!post){
+            req.flash('error', 'Post not found!');
+            res.redirect('/my-posts')
+        }
+
+        res.render('posts/edit-post', { title: 'Edit Post', active: 'edit-post', post })
         
     } catch (error) {
         console.error(error)
@@ -83,12 +94,74 @@ router.get('/edit-post/:id', protectedRoute, async (req, res) => {
         
     }
 
-    res.render('posts/edit-post', { title: 'Edit Post', active: 'edit-post' })
+    
 })
 
+// handle update a post request 
+
+router.post('/update-post/:id', protectedRoute, upload.single('image'), async (req, res) => {
+    try {
+
+        const postId = req.params.id
+        const post = await Post.findById(postId)
+
+        if(!post){
+
+            req.flash('error', 'Post not found!')
+            return res.redirect('/my-posts')
+        }
+
+
+        post.title = req.body.title
+        post.content = req.body.content 
+        post.slug = req.body.title.replace(/\s+/g, '-').toLowerCase()
+
+        if(req.file){
+            unlink(path.join(process.cwd(), 'uploads') + '/' + post.image, (err) => {
+
+                if(err) {
+                    console.error(err)
+                }
+
+            })
+
+            post.image = req.file.filename
+        }
+
+        await post.save(); 
+        req.flash('success', 'Post updated succesfully!')
+        res.redirect('/my-posts')
+        
+    } catch (error) {
+        console.error(error)
+        req.flash('error', 'Something went wrong!')
+        res.redirect('/my-posts')
+        
+    }
+})
+
+
 // route for view post in detail 
-router.get('/post/:id', (req, res) => {
-    res.render('posts/view-post', { title: 'View Post', active: 'view-post' })
+router.get('/post/:slug', async (req, res) => {
+
+    try {
+
+        const slug = req.params.slug
+        const post = await Post.findOne({ slug }).populate('user')
+
+        if(!post){
+            req.flash('error', 'Post not found!')
+            return res.redirect('/my-posts')
+        }
+
+        res.render('posts/view-post', { title: 'View Post', active: 'view-post', post })
+        
+    } catch (error) {
+        console.error(error)
+        req.flash('error', 'Something went wrong!')
+        res.redirect('/my-posts')
+    }
+  
 })
 
 
@@ -125,6 +198,40 @@ router.post('/create-post', protectedRoute, upload.single('image'), async (req, 
         res.redirect('/create-post')
     }
 
+})
+
+
+// handle delete post request
+
+router.post('/delete-post/:id', protectedRoute, async (req, res) => {
+    try {
+
+        const postId = req.params.id
+        const post = await Post.findById(postId)
+
+        if(!post) {
+            req.flash('error', 'Post not found!')
+            return res.redirect('/my-posts')
+            
+        }
+
+        await User.updateOne({ _id: req.session.user._id }, {$pull: { posts: postId} })
+        await Post.deleteOne({ _id: postId })
+
+        unlink(path.join(process.cwd(), 'uploads') + '/' + post.image, (err) => {
+            if(err) {
+                console.error(err);
+            }
+        })
+
+        req.flash('success', 'Post delete succesfully!')
+        res.redirect('/my-posts');
+        
+    } catch (error) {
+        console.error(error)
+        req.flash('error', 'Something went wrong!')
+        res.redirect('/my-posts')
+    }
 })
 
 export default router;
